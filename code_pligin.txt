@@ -1,0 +1,136 @@
+//<?php
+	/**
+		* mmtv
+		*
+		* Plugin for multiTv
+		*
+		* @category    plugin
+		* @version     0.1
+		* @license     http://www.gnu.org/copyleft/gpl.html GNU Public License (GPL)
+		* @package     modx
+		* @author      Alexey Liber (alexey@liber.pro)
+		* @internal    @events OnDocFormRender
+		* @internal    @modx_category Manager and Admin
+		* @internal    @installset base
+		* @internal    @disabled 1
+	*/
+	
+	global $modx;
+	$e = &$modx->Event;
+	
+	$output = '';
+	
+	
+	
+	
+	if ($e->name == 'OnDocFormRender'){
+		
+		$output = '<script>
+		(function($) { 
+		// settings 
+		var selector = "textarea.mtv_answers", 
+		bindedClass = "binded-class", 
+		checkPeriod = 1000, 
+		debug = false; 
+		
+		// css 
+		if (!debug) { 
+		$( 
+		"<style type=\'text/css\'>" + 
+		"textarea." + bindedClass + " { display: none; }; " + 
+		"</style>" 
+		).appendTo("head"); 
+		} 
+		
+		var htmlesc = function(str) { 
+		return String(str) 
+		.replace(/&/g, "&amp;") 
+		.replace(/\'/g, "&quot;") 
+		.replace(/"/g, \'"\') 
+		.replace(/</g, "&lt;") 
+		.replace(/>/g, "&gt;"); 
+		}; 
+		
+		var createRow = function(name, value) { 
+		if (name === undefined) name = ""; 
+		if (value === undefined) value = ""; 
+		return $( 
+		"<div class=\'p-row\'>" + 
+		"<input type=\'text\' class=\'p-name\' style=\'width:500px;\' placeholder=\'вариант ответа\' value=\'" + htmlesc(name) + "\'> " + 
+		"<input type=\'text\' class=\'p-value\' style=\'width:100px;\' placeholder=\'балл\' value=\'" + htmlesc(value) + "\'> " + 
+		"<input type=\'button\' class=\'p-add\' value=\' + \'> " + 
+		"<input type=\'button\' class=\'p-del\' value=\' &ndash; \'>" + 
+		"</div>" 
+		); 
+		}; 
+		
+		var initEditor = function($areas) { 
+		$areas.each(function() { 
+		var $area = $(this); 
+		$container = $("<div class=\'p-container\'></div>"); 
+		text = $.trim($area.val()); 
+		
+		$area.addClass(bindedClass); 
+		$area.after($container); 
+		var params = text.split("||"); 
+		for (var i = 0; i < params.length; ++i) { 
+		var pair = params[i].split("=="), 
+		name = pair[0], 
+		val = pair.length == 2 ? pair[1] : ""; 
+		$container.append(createRow(name, val)); 
+		} 
+		}); 
+		}; 
+		
+		var updateArea = function($container) { 
+		var $area = $container.prev("." + bindedClass), 
+		$names = $("input.p-name", $container), 
+		$values = $("input.p-value", $container), 
+		encoded = "", 
+		count = $names.length; 
+		
+		for (var i = 0; i < count; ++i) { 
+		var name = $names[i].value; 
+		if (!name.length) continue; 
+		if (i != 0 && encoded.length) encoded += "||"; 
+		encoded += name + "==" + $values[i].value; 
+		} 
+		
+		$area.val(encoded).change(); 
+		}; 
+		
+		var checkDom = function() { 
+		$(".mtv_title").css({"width":"500px"});
+		var $newAreas = $(selector + ":not(." + bindedClass + ")");
+		if ($newAreas.length) { 
+		initEditor($newAreas); 
+		} 
+		}; 
+		
+		$(".sectionBody").on("click", "div.p-container input.p-add", function() { 
+		$(this).parent().after(createRow()); 
+		}); 
+		
+		$(".sectionBody").on("click", "div.p-container input.p-del", function() { 
+		var $row = $(this).parent(); 
+		if ($row.siblings().length) { 
+		var $container = $row.closest("div.p-container"); 
+		$row.remove(); 
+		updateArea($container); 
+		} 
+		}); 
+		
+		$(".sectionBody").on("change", "div.p-container input[type=text]", function() { 
+		updateArea($(this).closest("div.p-container")); 
+		});
+		$(".sectionBody").on("click", ".multitv .list li.element a.copy", function() { 
+		console.log(\'Hellow\');
+		setTimeout(checkDom, 200);
+		}); 
+		
+		
+		setTimeout(checkDom, checkPeriod);
+		})(jQuery);
+		</script>';
+		$e->output($output);
+	}	
